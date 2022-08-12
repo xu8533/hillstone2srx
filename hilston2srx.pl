@@ -15,20 +15,14 @@ use v5.10.1;
 #The major aim of the script is translate juniper's ssg config to juniper srx config
 
 # define variable
-my $SRC_ZONE;
-my $DST_ZONE;
-my @SRC_ADDRESSES;
-my @DST_ADDRESSES;
-my $POLICY_ACTION;
-my $GLOBAL_ADDRESS_BOOKS;
-my $text;
-my @texts;
-my $n=0;
+my $text;   # save all config
+my @texts;  # save all config to array
+my $n=0;    # line number of config
 my %hilston_srx_services        = (
     FTP     => "junos-ftp",     Any     => "any",
     HTTP    => "junos-http",    HTTPS   => "junos-https",
     SSH     => "junos-ssh",     SYSLOG  => "junos-syslog",
-    RDP     => "junos-rdp",
+    RDP     => "junos-rdp",     ICMP    => "junos-icmp-all",
 );
 
 sub set_address_books {
