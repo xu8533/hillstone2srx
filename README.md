@@ -1,3 +1,3 @@
 # hilston2srx
-a little script that translate hilston fw to juniper srx configuration \
+A little script that translate hilston fw configuration to juniper srx \
 Usage: perl hilston2srx.pl <hilston config file>
