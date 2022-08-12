@@ -122,9 +122,14 @@ sub set_polices {
         }
         $n++;
     }
-    if (defined ($src_zone && $dst_zone)) {
+    if (defined ($src_zone && $dst_zone) && ($src_zone ne "any" && $dst_zone ne "any")) {
         print "set security policies from-zone $src_zone to-zone $dst_zone policy p_$policy_id match source-address [ @src_address ] destination-address [ @dst_address ] application [ @application ]\n";
         print "set security policies from-zone $src_zone to-zone $dst_zone policy p_$policy_id then $action\n";
+    }
+    elsif (defined ($src_zone && $dst_zone) && ($src_zone eq "any" || $dst_zone eq "any")) {
+        print "set security policies global policy p_$policy_id match source-address [ @src_address ] destination-address [ @dst_address ] application [ @application ]\n";
+        print "set security policies global policy p_$policy_id match from-zone $src_zone to-zone $dst_zone\n";
+        print "set security policies global policy p_$policy_id then $action\n";
     }
     elsif (!defined ($src_zone && $dst_zone)) {
         print "set security policies global policy p_$policy_id match source-address [ @src_address ] destination-address [ @dst_address ] application [ @application ]\n";
