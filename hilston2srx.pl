@@ -197,6 +197,34 @@ sub set_interface_zone {
     return;
 }
 
+sub set_route {
+    local $routing_instance;
+    $n++;
+    until($texts[$n] eq "exit") {
+        $routing_instance = "@_";
+        local @cells = split/\s+/, $texts[$n];
+        local $cells_num = @cells;
+        given($cells[1]) {
+            when ("route") {
+                if ($cells_num == 4) {
+                    print "set routing-instances $routing_instance routing-options static route $cells[-2] next-hop $cells[-1]\n";
+                }
+                elsif ($cells_num == 5) {
+                    print "set routing-instances $routing_instance routing-options static route $cells[2] next-hop $cells[-1]\n";
+                }
+                elsif ($cells_num == 7 && $cells[-2] eq "description") {
+                    print "set routing-instances $routing_instance routing-options static route $cells[2] next-hop $cells[-3]\n";
+                    print "edit routing-instances $routing_instance routing-options static\n";
+                    print "annotate route $cells[2] $cells[-1]\n";
+                    print "top\n";
+                }
+            }
+        }
+        $n++;
+    }
+    print "set routing-instances $routing_instance instance-type virtual-router\n" if defined($routing_instance);
+}
+
 #The BEGIN part process some staff
 BEGIN {
     if ($#ARGV < 0 || $#ARGV > 5) { die "\nUsage:\tperl hilston2srx.pl <config.file>\n
@@ -230,6 +258,7 @@ while (($key, $value) = each %hilston_srx_services) {
 # remove white at begein and end
 @texts = map { s/^\s+|\s+$//gr } @texts;
 
+# first cycle for address, service, rule, interface, zone
 while ($texts[$n]) {
     my @configs = split/\s+/, $texts[$n];
     given($configs[0]) {
@@ -244,6 +273,20 @@ while ($texts[$n]) {
         }
         when ("interface") {
             set_interface_zone($configs[-1]);
+        }
+    }
+    $n++;
+}
+
+# second cycle for route
+$n = 0;
+
+while ($texts[$n]) {
+    my @configs = split/\s+/, $texts[$n];
+    my $routing_instance;
+    given($configs[1]) {
+        when ("vrouter") {
+            set_route ($configs[-1]);
         }
     }
     $n++;
