@@ -25,6 +25,29 @@ my %hilston_srx_services        = (
     RDP     => "junos-rdp",     ICMP    => "junos-icmp-all",
 );
 
+sub get_netmask {
+    my $netmask = "@_";
+    my @netmasks = split (/\./, $netmask);
+    my $array_num = @netmasks;
+    my $bit_num = 0;
+    RETURN_BIT_NUM:
+    for (my $i=0; $i<$array_num; $i++) {
+        my $factor = 7;
+        my $sum = 0;
+        if ($netmasks[$i] != 0) {
+            while ($netmasks[$i] != $sum) {
+                $sum += 2**$factor;
+                $factor--;
+                $bit_num++;
+            }
+        }
+        elsif ($netmasks[$i] == 0) {
+            last RETURN_BIT_NUM;
+        }
+    }
+    return $bit_num;
+}
+
 sub set_address_books {
     local $address_book_name = "@_";
     $n++;
@@ -138,6 +161,42 @@ sub set_polices {
     return;
 }
 
+sub set_interface_zone {
+    local $interface = "@_";
+    local $port_num = (split/\//, $interface)[-1];
+    $interface =~ s!aggregate!reth!;
+    $n++;
+    local $zone;
+    until($texts[$n] eq "exit") {
+        local @cells = split/\s+/, $texts[$n];
+        given($cells[0]) {
+            when ("aggregate") {
+                $cells[-1] =~ s!aggregate!reth!;
+                print "set interfaces xe-0/0/$port_num gigether-options redundant-parent $cells[-1]\n";
+                print "set interfaces $cells[-1] redundant-ether-options redundancy-group 1\n";
+            }
+            when ("zone") {
+                $zone = $cells[-1];
+                print "set security zones security-zone $zone interfaces $interface\n";
+
+            }
+            when ("ip") {
+                local $cells_num = @cells;
+                if ($cells_num == 4) {
+                    local $ip = $cells[-2];
+                    local $netmask = get_netmask($cells[-1]);
+                    print "set interfaces $interface family inet address $ip/$netmask\n";
+                }
+            }
+            when ("manage") {
+                print "set security zones security-zone $zone interfaces $interface host-inbound-traffic system-services $cells[-1]\n"; 
+            }
+        }
+        $n++;
+    }
+    return;
+}
+
 #The BEGIN part process some staff
 BEGIN {
     if ($#ARGV < 0 || $#ARGV > 5) { die "\nUsage:\tperl hilston2srx.pl <config.file>\n
@@ -182,6 +241,9 @@ while ($texts[$n]) {
         }
         when ("rule") {
             set_polices ($configs[-1]);
+        }
+        when ("interface") {
+            set_interface_zone($configs[-1]);
         }
     }
     $n++;
