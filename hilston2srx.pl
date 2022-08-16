@@ -131,6 +131,10 @@ sub set_polices {
                 push @dst_address, $cells[-1];
                 print "set security address-book global address $cells[-1] $cells[-1]\n";
             }
+            when ("dst-host") {
+                push @dst_address, $cells[-1];
+                print "set security address-book global address $cells[-1] $cells[-1]\n";
+            }
             when ("service") {
                 push @application, $cells[-1];
             }
@@ -145,19 +149,28 @@ sub set_polices {
         }
         $n++;
     }
-    if (defined ($src_zone && $dst_zone) && ($src_zone ne "any" && $dst_zone ne "any")) {
+    # if source address, destination address, application and action not defined, the policy will not function in hilston, so ignore these rules
+    # perl no longer support test array and hash by defined function, instead of if (@array or %hash)
+    if (defined ($src_zone && $dst_zone && $action) && (@src_address && @dst_address && @application) && ($src_zone ne "any" && $dst_zone ne "any")) {
         print "set security policies from-zone $src_zone to-zone $dst_zone policy p_$policy_id match source-address [ @src_address ] destination-address [ @dst_address ] application [ @application ]\n";
         print "set security policies from-zone $src_zone to-zone $dst_zone policy p_$policy_id then $action\n";
     }
-    elsif (defined ($src_zone && $dst_zone) && ($src_zone eq "any" || $dst_zone eq "any")) {
+    elsif (defined ($src_zone && $dst_zone && $action) && (@src_address && dst_address && @application) && ($src_zone eq "any" || $dst_zone eq "any")) {
         print "set security policies global policy p_$policy_id match source-address [ @src_address ] destination-address [ @dst_address ] application [ @application ]\n";
         print "set security policies global policy p_$policy_id match from-zone $src_zone to-zone $dst_zone\n";
         print "set security policies global policy p_$policy_id then $action\n";
     }
-    elsif (!defined ($src_zone && $dst_zone)) {
+    elsif (!defined ($src_zone && $dst_zone) && (@src_address && @dst_address && @application) && defined $action) {
         print "set security policies global policy p_$policy_id match source-address [ @src_address ] destination-address [ @dst_address ] application [ @application ]\n";
         print "set security policies global policy p_$policy_id then $action\n";
     }
+    #undef ($src_zone, $dst_zone, @src_address, @dst_address, @application, $action);
+    undef $src_zone;
+    undef $dst_zone;
+    undef @src_address;
+    undef @dst_address;
+    undef @application;
+    undef $action;
     return;
 }
 
@@ -241,7 +254,6 @@ BEGIN {
     open my $config, '<', $ARGV[0] or die "can't open file:$!\n"; #open the config filehandle
     $text = do { local $/; <$config> };
     $text =~ s#\"##g;
-    #   $text =~ s/^\s+//g;
     close $config;
 }
 
