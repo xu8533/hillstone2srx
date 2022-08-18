@@ -12,7 +12,7 @@ use File::Basename;
 #use vars qw($opt_c);
 use v5.10.1;
 #use DateTime::Format::Flexible;
-#The major aim of the script is translate juniper's ssg config to juniper srx config
+#The major aim of the script is translate hillstone config to juniper srx config
 
 # define variable
 my $text;   # save all config
