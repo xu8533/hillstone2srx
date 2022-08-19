@@ -5,14 +5,14 @@ use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
 #use NetAddr::IP;
 #use Net::IP::LPM;
-use Getopt::Std;
-use Cwd 'abs_path';
-use File::Basename;
+#use Getopt::Std;
+#use Cwd 'abs_path';
+#use File::Basename;
 use Excel::Writer::XLSX;
 use vars qw($opt_c);
 use v5.10.1;
 #use DateTime::Format::Flexible;
-#The major aim of the script is translate hillstone config to juniper srx config
+#The major goal of the script is translate hillstone config to juniper srx config
 
 # define variable
 my $text;   # save all config
